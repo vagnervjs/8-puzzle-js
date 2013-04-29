@@ -1,3 +1,13 @@
+<!-- ======================
+Jogo dos Quadrados
+Inteligência Artificial
+FCT - Unesp
+Author: Vagner Santana
+RA: 1288549
+v0.1
+File: style.css
+====================== -->
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,11 +17,12 @@
 	<link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
 </head>
 <body>
+	<header>
+		<h1>Jogo dos Quadrados</h1>
+		<h2>Inteligência Artificial</h2>
+	</header>
 
-	<div class="main">
-		<button id="mix">Embaralhar</button>
-		<input type="number" id="moves" value="" placeholder="# of moves">
-		<p id="moves_num"></p>
+	<div class="game">
 		<ul>
 			<li id="sq-1" class="square">
 				<div id="pc-1">1</div>
@@ -41,6 +52,15 @@
 			</li>
 		</ul>
 	</div>
+	<div class="options">
+		<button id="mix" class="btn">Embaralhar</button>
+		<input type="number" id="moves" value="" placeholder="# of moves">
+		<p id="moves_num" class="rg"></p>
+	</div>
+
+	<footer>
+		<p>Autor: Vagner José Santana</p>
+	</footer>
 
 	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>

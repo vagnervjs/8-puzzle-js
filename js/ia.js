@@ -1,3 +1,13 @@
+/* ======================
+Jogo dos Quadrados
+Inteligência Artificial
+FCT - Unesp
+Author: Vagner Santana
+RA: 1288549
+v0.1
+File: ia.js
+=========================*/
+
 var pos = [];
 	pos[1] = [2, 4];
 	pos[2] = [1, 3, 5];
@@ -23,12 +33,13 @@ $(document).ready(function() {
 			if(r){
 				$('.square div').addClass('success');
 				setTimeout(function(){
-					$('.main').fadeOut('slow');
+					$('.game').fadeOut('slow');
 				}, 500);
 
 				setTimeout(function(){
-					$('.main').html('<h1>Success!!!</h1>');
-					$('.main').fadeIn('slow');
+					var msg = '<h1>Parabéns!!!</h1><a href="index.html" class="btn">Jogar Novamente</a>';
+					$('.game').html(msg);
+					$('.game').fadeIn('slow');
 				}, 1000);
 			}
 		}
@@ -37,7 +48,7 @@ $(document).ready(function() {
 	$("#mix").on("click", function(){
 		var i = $("#moves").val();
 		if(i === ''){
-			i = 10000;
+			i = 1000;
 		}
 		mix(i);
 	});

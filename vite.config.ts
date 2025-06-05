@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
+// import { defineConfig } from 'vite'; // Using JSDoc type hint instead
 
 // https://vitejs.dev/config/
-export default defineConfig({
+/** @type {import('vite').UserConfig} */
+export default {
   // No specific plugins needed for basic TS and static asset serving from root.
   // Vite handles TypeScript compilation out of the box.
   // It will serve index.html from the project root by default.
@@ -22,4 +23,4 @@ export default defineConfig({
   },
   // Ensure Vitest can also use this config if needed, though Vitest has its own config usually.
   // For now, this is primarily for Vite's dev server and `vite build`.
-});
+};

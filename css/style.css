@@ -1,184 +1,255 @@
 /* ======================
-Jogo dos Quadrados
-Inteligência Artificial
-FCT - Unesp
-Author: Vagner Santana
-RA: 1288549
-v0.1
-File: style.css
-=========================*/
+   New Modernized Styles
+   ====================== */
 
-/* ======================
-	Tags Style
-=========================*/
-body{
-	margin: 0;
-	padding: 0;
-	font-family: 'Ubuntu', sans-serif;
-	background: rgb(83,83,83);
-}
-h1{
-	font-size: 45px;
-	text-shadow: 0px -2px 0px #333,
-				 0px 2px 3px #666;
-}
-h1, h2{text-align: center;}
-ul{list-style: none;}
-a{text-decoration: none;}
-
-input{height: 28px; width: 100px;}
-footer{
-	margin: 10px auto;
-	width: 80%;
-	text-align: center;
-	border-top: dashed 1px #696b6f;
+/* Base and Typography */
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
-/* ======================
-	Page Elements
-=========================*/
-.btn {
-    padding: 10px;
-    position: relative;
-    font-size: 14px;
-    text-decoration: none;
-    color: #fff;
-    background: #104b6b;
-    border: solid 1px #072231;
-    border-radius: 5px;
+body {
+    font-family: 'Roboto', Arial, sans-serif; /* Using Roboto from Google Fonts if available, otherwise fallbacks */
+    color: #2F4F4F; /* Dark Slate Gray */
+    background-color: #E0F2F1; /* Very Light Mint/Cyan */
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Header Styles */
+header {
+    text-align: center;
+    padding: 20px 10px;
+    margin-bottom: 20px; /* Space below header */
+}
+
+header h1 {
+    font-size: 2.5em; /* Responsive font size */
+    color: #004D40; /* Dark Teal */
+    margin-bottom: 0.25em;
+}
+
+header h2 {
+    font-size: 1.5em; /* Responsive font size */
+    color: #00695C; /* Medium Teal */
+    font-weight: 400; /* Lighter than h1 */
+}
+
+/* Main App Container */
+.app-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    /* background-color: #FFFFFF; Optional: if a white card background is desired */
+    /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); Optional: subtle shadow */
+    border-radius: 8px; /* Optional: if container has a background */
+}
+
+/* Options Area */
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Spacing between items */
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #FFFFFF; /* White background for options area */
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+}
+
+/* Buttons Styling */
+.btn, button#mix, button#solve { /* Apply to general .btn and specific IDs */
+    background-color: #FFDAB9; /* Soft Coral / Peach Puff */
+    color: #2F4F4F; /* Dark Slate Gray text */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-family: inherit; /* Inherit font from body */
     cursor: pointer;
-}
-.btn:hover {
-    background: #0c3c56;
-}
-
-.btn:active {
-    padding-bottom: 9px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-top: 11px;
-    top: 1px;
-    background: #082a3c;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.lf{float: left;}
-.rg{float: right;}
+.btn:hover, button#mix:hover, button#solve:hover {
+    background-color: #FFE4C4; /* Lighter Soft Coral / Bisque */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn:active, button#mix:active, button#solve:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn:disabled, button#mix:disabled, button#solve:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #F0E68C; /* Khaki - more distinct disabled state */
+    box-shadow: none;
+    transform: translateY(0px);
+}
+
+/* Input Field (#moves) */
+input#moves {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #CFD8DC; /* Soft Gray border */
+    font-size: 1em;
+    font-family: inherit;
+    max-width: 120px; /* Slightly wider for numbers */
+    text-align: center;
+}
+
+input#moves:focus {
+    outline: none;
+    border-color: #00796B; /* Teal focus color */
+    box-shadow: 0 0 0 2px rgba(0, 121, 107, 0.2);
+}
+
+/* Message Paragraphs (#moves_num, #bot_message) */
+p#moves_num, p#bot_message {
+    min-height: 1.2em; /* Prevent layout shifts */
+    font-size: 0.95em;
+    color: #2F4F4F; /* Dark Slate Gray */
+    margin: 0; /* Reset margin */
+    padding: 5px 0; /* Add some vertical padding */
+    text-align: center; /* Center align messages */
+    flex-basis: 100%; /* Make them take full width in flex container if needed */
+}
+
+/* Footer Styles */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    font-size: 0.85em;
+    color: #555; /* Medium Gray */
+    border-top: 1px solid #CFD8DC; /* Light Gray border */
+}
+
 
 /* ======================
-	Game Elements 
-=========================*/
-.game{
-	width: 364px;
-	height: 350px;
-	margin: 0 auto;
-	text-align: center;
+   Original Game Grid Styles (Adapted)
+   ====================== */
+
+/* Retaining for .game ul specifically if needed, though reset above */
+ul {
+    list-style: none;
+    /* padding: 0; already reset by global reset */
+    /* margin: 0; already reset by global reset */
+}
+a { text-decoration: none; } /* Good general reset */
+
+
+/* .game is the direct parent of the <ul> for squares */
+.game {
+	width: 324px;
+	height: 324px;
+	margin: 40px auto 60px auto; /* Increased top/bottom margin for 3D effect visibility */
+    perspective: 1000px; /* Create 3D space for children */
 }
 
-.game ul{
-	position: relative;
-	left: -25px;
+/* The <ul> holding the squares */
+.game ul {
+    padding: 0;
+    margin: 0 auto;
+    width: 100%; /* Take width of .game container */
+    display: grid; /* Using Grid for layout */
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    border: 2px solid #333;
+    border-radius: 10px;
+    background-color: #BDBDBD;
+    padding: 4px;
+    transform-style: preserve-3d; /* Enable 3D space for children (squares) */
+    transform: rotateX(20deg); /* Tilt the board slightly */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.15); /* Shadow for the board */
 }
 
-.square{
+/* Individual <li> square */
+.square {
 	width: 100px;
 	height: 100px;
 	list-style: none;
-	border: solid 2px #000;
-	float: left;
+    border: 1px solid #D8BFD8; /* Darker Lavender for tile "sides" effect */
 	text-align: center;
-	font-size: 50px;
-	border-radius: 10px;
-	margin: 2px;
+	font-size: 2.5em;
+	font-weight: bold;
+	border-radius: 8px;
 	cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #E6E6FA; /* Soft Lavender for tiles - new base */
+    color: #3A3A3A;
+    transform-style: preserve-3d; /* If children need 3D transforms */
+    transform: translateZ(5px); /* Lift tiles slightly */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Shadow for each tile */
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, background-color 0.3s ease;
 }
 
-.square div{
-	width: 100px;
-	height: 100px;
-	border-radius: 7px;
-	line-height: 100px;
+.square:hover {
+    background-color: #F0F0FF; /* Lighter lavender on hover */
+    transform: translateZ(15px) scale(1.05); /* Lift further and scale */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3); /* More pronounced shadow on hover */
 }
 
-.options{
-	width: 500px;
-	margin: 0 auto;
+/* The <div> piece inside the square */
+.square div {
+	width: 100%;
+	height: 100%;
+	border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Tile number div could have its own transform: translateZ(2px); if desired */
 }
 
-/* Preenchimento de cores */
-.success{
-	background: #0ae624 !important;
-	background: -webkit-linear-gradient(top, #0ae624, #038312) repeat-X !important;
-	background: -moz-linear-gradient(top, #0ae624, #038312) repeat-X !important;
-	background: -o-linear-gradient(top, #0ae624, #038312) repeat-X !important;
-	background: -ms-linear-gradient(top, #0ae624, #038312) repeat-X !important;
-	background: linear-gradient(top, #0ae624, #038312) repeat-X !important;
+
+/* This .success class is for the pieces when game is won */
+.square div.success {
+    background-color: #66BB6A !important; /* Slightly softer Green for success */
+    color: white !important;
+    box-shadow: 0 0 10px #66BB6A;
 }
 
-#pc-1{
-	background: #133b90;
-	background: -webkit-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -moz-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -o-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -ms-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: linear-gradient(top, #133b90, #0ab5b4) repeat-X;
+/* Tile Piece Colors (Pastel shades) */
+#pc-1 { background-color: #FFCCBC; } /* Light Peach */
+#pc-2 { background-color: #FFCDD2; } /* Light Pink */
+#pc-3 { background-color: #D1C4E9; } /* Light Purple */
+#pc-4 { background-color: #C5CAE9; } /* Light Indigo */
+#pc-5 { background-color: #BBDEFB; } /* Light Blue */
+#pc-6 { background-color: #B2EBF2; } /* Light Cyan */
+#pc-7 { background-color: #C8E6C9; } /* Light Green */
+#pc-8 { background-color: #FFF9C4; } /* Light Yellow (was default, now specific) */
+
+
+/* Style for the empty square */
+.square.free {
+	background: #ECEFF1 !important; /* Very Light Grey, distinct from tiles */
+    border-color: #CFD8DC;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1); /* Inner shadow to look empty */
+    cursor: default;
+    transform: translateZ(0px) scale(1); /* Flat, no lift, no hover scale */
 }
-#pc-2{
-	background: #133b90;
-	background: -webkit-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -moz-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -o-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -ms-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-}
-#pc-3{
-	background: #133b90;
-	background: -webkit-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -moz-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -o-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: -ms-linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-	background: linear-gradient(top, #133b90, #0ab5b4) repeat-X;
-}
-#pc-4{
-	background: #0ab5b4;
-	background: -webkit-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -moz-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -o-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -ms-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-}
-#pc-5{
-	background: #0ab5b4;
-	background: -webkit-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -moz-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -o-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -ms-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-}
-#pc-6{
-	background: #0ab5b4;
-	background: -webkit-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -moz-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -o-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: -ms-linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-	background: linear-gradient(top, #0ab5b4, #1fe883) repeat-X;
-}
-#pc-7{
-	background: #1fe883;
-	background: -webkit-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: -moz-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: -o-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: -ms-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: linear-gradient(top, #1fe883, #d1f535) repeat-X;
-}
-#pc-8{
-	background: #1fe883;
-	background: -webkit-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: -moz-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: -o-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: -ms-linear-gradient(top, #1fe883, #d1f535) repeat-X;
-	background: linear-gradient(top, #1fe883, #d1f535) repeat-X; 
+.square.free:hover {
+    transform: translateZ(0px) scale(1); /* Ensure no hover effect */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
 }
 
-.free{
-	background: #ffffff;
+
+/* Ensure .square.free does not show piece text color if a div was accidentally left in */
+.square.free div {
+    color: transparent;
+    background-color: transparent !important;
+}
+
+/* Default text color for pieces */
+.square div {
+    color: #424242; /* Darker Gray for better contrast on pastel pieces */
 }

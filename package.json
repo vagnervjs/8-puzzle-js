@@ -6,8 +6,8 @@
   "scripts": {
     "test": "npx vitest run",
     "test:ui": "npx vitest --ui",
-    "build": "vite build",
-    "dev": "vite"
+    "build": "npx vite build",
+    "dev": "npx vite"
   },
   "keywords": [
     "8-puzzle",

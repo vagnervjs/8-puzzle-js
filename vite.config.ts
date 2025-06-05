@@ -3,6 +3,8 @@
 // https://vitejs.dev/config/
 /** @type {import('vite').UserConfig} */
 export default {
+  // Base path for GitHub Pages deployment
+  base: '/8-puzzle-js/',
   // No specific plugins needed for basic TS and static asset serving from root.
   // Vite handles TypeScript compilation out of the box.
   // It will serve index.html from the project root by default.

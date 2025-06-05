@@ -15,8 +15,11 @@ export class GameUIController {
     private solutionActions: SearchNodeAction[] = [];
     /** Bound event handler for square click events to ensure correct `this` context. */
     private readonly boundHandleSquareClick: (event: Event) => Promise<void>;
-    /** Stores the ID of the square being dragged. */
+    /** Stores the ID of the square whose piece content is being dragged. */
     private draggedSquareId: string | null = null;
+    /** Flag to indicate if a drag operation is currently in progress. */
+    private isDragging: boolean = false;
+
 
     // DOM Element references
     private readonly mixButton: HTMLButtonElement | null;
@@ -44,14 +47,14 @@ export class GameUIController {
         }
 
         this.freeSquareId = this.findInitialFreeSquareIdSafe();
-        this.boundHandleSquareClick = this.handleSquareClick.bind(this); // For click
+        this.boundHandleSquareClick = this.handleSquareClick.bind(this);
         this.init();
     }
 
     private init(): void {
-        this.bindSquareClicks(); // For click interactions
-        this.bindDragDropEvents(); // For D&D interactions
-        this.updateDraggableStatus(); // Set initial draggable states
+        this.bindSquareClicks();
+        this.bindDragDropEvents();
+        this.updateDraggableStatus();
 
         this.mixButton?.addEventListener("click", this.handleMixClick.bind(this));
         this.solveButton?.addEventListener("click", this.handleSolveClick.bind(this));
@@ -83,15 +86,17 @@ export class GameUIController {
 
     private bindDragDropEvents(): void {
         this.squares.forEach(square => {
-            // Events for the square (drop target)
             square.addEventListener('dragover', this.handleDragOver.bind(this));
             square.addEventListener('drop', this.handleDrop.bind(this));
-            // Could add dragenter/dragleave for visual feedback on drop target
+            // Optional: Add dragenter/dragleave for visual feedback on drop target
+            // square.addEventListener('dragenter', (e) => (e.currentTarget as HTMLElement).classList.add('drag-over'));
+            // square.addEventListener('dragleave', (e) => (e.currentTarget as HTMLElement).classList.remove('drag-over'));
 
-            // Event for the piece content (draggable item)
+
             const pieceContent = square.firstElementChild as HTMLElement | null;
-            if (pieceContent && !square.classList.contains('free')) {
+            if (pieceContent) { // All squares might have a div, but only non-free are draggable initially
                 pieceContent.addEventListener('dragstart', this.handleDragStart.bind(this));
+                pieceContent.addEventListener('dragend', this.handleDragEnd.bind(this));
             }
         });
     }
@@ -100,9 +105,11 @@ export class GameUIController {
         const pieceContent = squareElement.firstElementChild as HTMLElement | null;
         if (pieceContent) {
             pieceContent.draggable = isDraggable;
-            // Optionally, add/remove a class to indicate draggable state visually
-            // if (isDraggable) pieceContent.classList.add('draggable-piece');
-            // else pieceContent.classList.remove('draggable-piece');
+            if(isDraggable) {
+                squareElement.classList.remove("non-draggable-square");
+            } else {
+                squareElement.classList.add("non-draggable-square");
+            }
         }
     }
 
@@ -117,23 +124,24 @@ export class GameUIController {
         this.squares.forEach(square => {
             if (disabled) {
                 square.removeEventListener("click", this.boundHandleSquareClick);
-                this.setDraggable(square, false); // No dragging when interaction is disabled
+                // Set all pieces to non-draggable
+                this.setDraggable(square, false);
             } else {
                 // Re-bind click
                 square.removeEventListener("click", this.boundHandleSquareClick);
                 square.addEventListener("click", this.boundHandleSquareClick);
-                // Update draggable status based on whether it's free or not
+                // Set draggable based on whether the square is free or not
                 this.setDraggable(square, !square.classList.contains('free'));
             }
         });
-        if (disabled) { // If disabling all interactions, ensure no piece is draggable
-            this.squares.forEach(sq => this.setDraggable(sq, false));
-        } else { // If enabling, call updateDraggableStatus to set correctly
+        // Ensure consistent state after bulk operation
+        if (!disabled) {
             this.updateDraggableStatus();
         }
     }
 
     private handleDragStart(event: DragEvent): void {
+        this.isDragging = true; // Set flag
         const pieceContent = event.target as HTMLElement;
         const squareElement = pieceContent.parentElement as HTMLLIElement | null;
 
@@ -141,62 +149,68 @@ export class GameUIController {
             this.draggedSquareId = squareElement.id;
             event.dataTransfer?.setData('text/plain', squareElement.id);
             if(event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-            // Optional: Add a class for visual feedback during drag
-            // pieceContent.classList.add('dragging');
+            pieceContent.classList.add('dragging'); // Visual feedback
         } else {
-            event.preventDefault(); // Prevent dragging if not a valid piece
+            event.preventDefault();
+        }
+    }
+
+    private handleDragEnd(event: DragEvent): void {
+        this.isDragging = false; // Reset flag
+        this.draggedSquareId = null; // Ensure draggedSquareId is cleared on drag end
+        const pieceContent = event.target as HTMLElement;
+        if (pieceContent) { // Check if target is indeed the piece content
+            pieceContent.classList.remove('dragging'); // Clean up visual feedback
         }
     }
 
     private handleDragOver(event: DragEvent): void {
-        event.preventDefault(); // Necessary to allow drop
+        event.preventDefault();
         if (event.dataTransfer) {
             event.dataTransfer.dropEffect = 'move';
         }
-        // Optional: Add class to potential drop target for visual feedback
         // const targetSquare = event.currentTarget as HTMLLIElement;
         // if (targetSquare.classList.contains('free')) {
-        //     targetSquare.classList.add('drag-over-target');
+        //     targetSquare.classList.add('drag-over-active-class'); // Add class for visual feedback
         // }
     }
 
     private async handleDrop(event: DragEvent): Promise<void> {
         event.preventDefault();
-        const targetSquareElement = event.currentTarget as HTMLLIElement;
-        // Optional: Remove drag-over visual feedback class
-        // targetSquareElement.classList.remove('drag-over-target');
+        // const targetSquareElement = event.currentTarget as HTMLLIElement;
+        // targetSquareElement.classList.remove('drag-over-active-class'); // Remove visual feedback
 
+        const targetSquareElement = event.currentTarget as HTMLLIElement;
         const sourceSquareDomId = event.dataTransfer?.getData('text/plain');
 
         if (!sourceSquareDomId || !this.draggedSquareId || sourceSquareDomId !== this.draggedSquareId) {
             console.warn("Drop event with invalid or mismatched draggedSquareId.", { sourceSquareDomId, dragged: this.draggedSquareId});
-            this.draggedSquareId = null;
+            this.draggedSquareId = null; // Reset if invalid
+            this.isDragging = false; // Ensure isDragging is reset
             return;
         }
 
-        // Ensure the drop target is the currently free square
         if (!targetSquareElement.classList.contains('free') || `#${targetSquareElement.id}` !== this.freeSquareId) {
-            this.draggedSquareId = null;
-            return; // Not a valid drop (not the free square)
+            this.draggedSquareId = null; // Reset
+            this.isDragging = false; // Ensure isDragging is reset
+            return;
         }
 
-        const draggedFromSquareId = this.draggedSquareId; // Store before resetting
+        const draggedFromSquareIdCurrent = this.draggedSquareId; // Keep for the call
         this.draggedSquareId = null; // Reset for next drag operation
+        // isDragging is reset in dragend, or here if we want to be quicker for logic
 
-        // Validate if the dragged piece can move to the target (free) square
-        const sourceSqNum = parseInt(draggedFromSquareId.split('-')[1]!, 10);
+        const sourceSqNum = parseInt(draggedFromSquareIdCurrent.split('-')[1]!, 10);
         const targetSqNum = parseInt(targetSquareElement.id.split('-')[1]!, 10);
 
         if (POS_ADJACENCY[sourceSqNum]?.includes(targetSqNum)) {
-            // Valid move, call the core move logic
-            await this.handleMoveLogic(draggedFromSquareId, `#${targetSquareElement.id}`);
+            await this.handleMoveLogic(draggedFromSquareIdCurrent, `#${targetSquareElement.id}`);
         } else {
             console.warn("Invalid drop: piece cannot move to target square.");
-            // Optional: Visual feedback for invalid drop
         }
+        // isDragging will be reset by handleDragEnd
     }
 
-    /** Core logic for handling a move, used by both click and D&D */
     private async handleMoveLogic(sourceSquareDomId: string, targetSquareDomId: string): Promise<void> {
         this.toggleSquareInteraction(true);
         this.toggleControlButtons(true);
@@ -205,15 +219,13 @@ export class GameUIController {
 
         this.currentMoves++;
         this.updateMovesCounter(this.currentMoves, 'Player');
-        this.updateDraggableStatus(); // Update draggable states after move
 
         const currentBoardState = this.getBoardStateFromDOM();
         if (isBoardSolved(currentBoardState)) {
             this.displayMessage("Congratulations! You solved it!", "success");
-            // Buttons and square interaction remain disabled by win
-            await this.triggerWinAnimation(); // toggleSquareInteraction(true) is called in here
+            await this.triggerWinAnimation(); // Disables interaction at the end
         } else {
-            this.toggleSquareInteraction(false); // Re-enable if not solved
+            this.toggleSquareInteraction(false); // Re-enable if not solved (this calls updateDraggableStatus)
             this.toggleControlButtons(false);
         }
     }
@@ -280,8 +292,12 @@ export class GameUIController {
     }
 
     private async handleSquareClick(event: Event): Promise<void> {
+        if (this.isDragging) {
+            this.isDragging = false; // Reset flag if a click occurs after a drag operation
+            return;
+        }
         const clickedSquareElement = event.currentTarget as HTMLLIElement | null;
-        if (!clickedSquareElement?.id || clickedSquareElement.classList.contains('free')) return; // Can't click free space
+        if (!clickedSquareElement?.id || clickedSquareElement.classList.contains('free')) return;
 
         const clickedSquareIdNumStr = clickedSquareElement.id.split('-')[1];
         const freeSquareIdNumStr = this.freeSquareId.startsWith('#sq-') ? this.freeSquareId.substring(4) : null;
@@ -330,7 +346,7 @@ export class GameUIController {
         return boardState;
     }
 
-    private handleMixClick(): void { // Shuffle logic should not use animations for speed
+    private handleMixClick(): void {
         let movesToMake = 1000;
         if (this.movesInput?.value) {
             const parsedVal = parseInt(this.movesInput.value, 10);
@@ -361,7 +377,8 @@ export class GameUIController {
         }
         this.updateMovesCounter(successfulMixMoves, 'Mix');
         this.displayMessage(`Shuffled ${successfulMixMoves} times. Good luck!`, "info");
-        this.toggleControlButtons(false); this.toggleSquareInteraction(false); // This calls updateDraggableStatus
+        this.toggleControlButtons(false);
+        this.toggleSquareInteraction(false); // This will call updateDraggableStatus
         this.currentMoves = 0;
     }
 
@@ -398,11 +415,10 @@ export class GameUIController {
         const performNextMove = async (): Promise<void> => {
             if (moveIndex >= this.solutionActions.length) {
                 this.displayMessage("Animation complete!", "success");
-                this.solutionActions = []; // Clear actions
-                // Check win and re-enable controls after win animation if any, or directly
+                this.solutionActions = [];
                 if (isBoardSolved(this.getBoardStateFromDOM())) {
-                    await this.triggerWinAnimation(); // triggerWinAnimation itself disables controls
-                } else { // Should be solved if animation completed, but as a fallback
+                    await this.triggerWinAnimation();
+                } else {
                     this.toggleControlButtons(false); this.toggleSquareInteraction(false);
                 }
                 return;
@@ -423,9 +439,9 @@ export class GameUIController {
 
             await this.movePieceOnDOM(pieceSquareIdToMove, targetEmptySquareId);
             this.updateMovesCounter(moveIndex + 1, 'Bot');
-            this.updateDraggableStatus(); // Update draggable after bot move
+            // this.updateDraggableStatus(); // Not strictly needed as interaction is disabled
             moveIndex++;
-            setTimeout(performNextMove, this.animationDuration + 100); // Ensure prev anim completes + buffer
+            setTimeout(performNextMove, this.animationDuration + 100);
         };
         await performNextMove();
     }

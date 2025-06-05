@@ -210,6 +210,10 @@ a { text-decoration: none; } /* Good general reset */
     /* Tile number div could have its own transform: translateZ(2px); if desired */
 }
 
+.square div.dragging {
+    opacity: 0.5; /* Make it semi-transparent while dragging */
+    cursor: grabbing; /* Change cursor to indicate dragging */
+}
 
 /* This .success class is for the pieces when game is won */
 .square div.success {

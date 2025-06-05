@@ -23,10 +23,15 @@ const Game = {
   NUM_SQUARES: 9,
   NUM_PIECES: 8,
   freeSquareId: '#sq-9', // Assuming 9th square is initially free
+  GOAL_STATE: [1, 2, 3, 4, 5, 6, 7, 8, 0], // 0 represents the empty square
+  currentSolutionActions: [], // Stores actions from A* solution
 
   init: function() {
-    $(".square").on("click", this.handleSquareClick.bind(this));
+    this.currentSolutionActions = []; // Initialize solution actions
+    this.boundHandleSquareClick = this.handleSquareClick.bind(this); // Store bound handler
+    this.bindSquareClicks(); // Initial binding
     $("#mix").on("click", this.handleMixClick.bind(this));
+    $("#solve").on("click", this.solveWithBot.bind(this));
     // Ensure the initial free square is correctly identified if it's not always #sq-9
     // This could involve checking the HTML on load if necessary.
   },
@@ -145,6 +150,259 @@ const Game = {
       return true;
     }
     return false;
+  },
+
+  getBoardState: function() {
+    const boardState = [];
+    for (let i = 1; i <= this.NUM_SQUARES; i++) {
+      const squareId = '#sq-' + i;
+      if (squareId === this.freeSquareId) {
+        boardState.push(0); // Represent empty square with 0
+      } else {
+        const piece = $(squareId).children().first(); // Get the first child, which should be the piece div
+        if (piece.length > 0 && piece.attr('id')) {
+          const pieceNum = parseInt(piece.attr('id').split('-')[1], 10);
+          boardState.push(pieceNum);
+        } else {
+          // This case should ideally not happen in a valid game state if not the free square
+          // but as a fallback, push a value indicating an error or unexpected state,
+          // or handle appropriately. For now, pushing -1 (or null) if unexpected.
+          boardState.push(null); // Or handle error appropriately
+        }
+      }
+    }
+    return boardState;
+  },
+
+  getManhattanDistance: function(boardState) {
+    let totalDistance = 0;
+    const dimension = Math.sqrt(this.NUM_SQUARES);
+
+    for (let i = 0; i < boardState.length; i++) {
+      const tileValue = boardState[i];
+
+      if (tileValue !== 0 && tileValue !== null) { // 0 is the empty space
+        // Current position
+        const currentRow = Math.floor(i / dimension);
+        const currentCol = i % dimension;
+
+        // Target position
+        // The GOAL_STATE stores values 1-8 and 0 for empty.
+        // The tileValue directly corresponds to what we search in GOAL_STATE.
+        const targetIndex = this.GOAL_STATE.indexOf(tileValue);
+        const targetRow = Math.floor(targetIndex / dimension);
+        const targetCol = targetIndex % dimension;
+
+        totalDistance += Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
+      }
+    }
+    return totalDistance;
+  },
+
+  // --- A* Search Implementation ---
+
+  // Helper function to create SearchNode objects
+  _createSearchNode: function(state, parent, action, g, h) {
+    return {
+      state: state,       // 1D array board state
+      parent: parent,     // Parent SearchNode
+      action: action,     // Action taken: { tileValue, fromIndex, toIndex }
+      g: g,               // Cost from start (depth)
+      h: h,               // Heuristic (Manhattan distance)
+      f: g + h            // Total cost
+    };
+  },
+
+  areArraysEqual: function(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0; i < arr1.length; i++) {
+      if (arr1[i] !== arr2[i]) return false;
+    }
+    return true;
+  },
+
+  reconstructPath: function(node) {
+    const path = [];
+    let currentNode = node;
+    while (currentNode.parent) {
+      path.unshift(currentNode.action); // Add action to the beginning of the path
+      currentNode = currentNode.parent;
+    }
+    return path; // Path of actions from start to goal
+  },
+
+  aStarSearch: function() {
+    const initialState = this.getBoardState();
+    if (this.areArraysEqual(initialState, this.GOAL_STATE)) {
+        $("#bot_message").text("Board is already solved!");
+        return []; // Already solved
+    }
+
+    const startNode = this._createSearchNode(initialState, null, null, 0, this.getManhattanDistance(initialState));
+    const openSet = [startNode]; // Priority queue (min-heap by 'f' score)
+    const closedSet = new Set(); // Stores stringified states
+
+    closedSet.add(initialState.toString());
+
+    while (openSet.length > 0) {
+      // Sort by f-score to simulate priority queue (inefficient for large sets, but simple)
+      openSet.sort((a, b) => a.f - b.f);
+      const currentNode = openSet.shift();
+
+      // Goal check
+      if (this.areArraysEqual(currentNode.state, this.GOAL_STATE)) {
+        return this.reconstructPath(currentNode);
+      }
+
+      // Find empty square (0)
+      const emptyIdx = currentNode.state.indexOf(0);
+      if (emptyIdx === -1) {
+        console.error("Error: No empty square found in current state during A* search.");
+        return null; // Should not happen
+      }
+
+      // The "number" of the square where the empty slot is (1-indexed for this.pos)
+      const emptySquareNumber = emptyIdx + 1;
+
+      // Get possible pieces that can move into the empty slot
+      // These are identified by their square numbers (1-indexed)
+      const movablePieceSquareNumbers = this.pos[emptySquareNumber];
+
+      for (const movablePieceSquareNum of movablePieceSquareNumbers) {
+        const neighborState = [...currentNode.state]; // Create a new state array
+
+        // Index of the piece that will move (0-indexed)
+        const pieceToMoveIdx = movablePieceSquareNum - 1;
+        const tileValueMoved = neighborState[pieceToMoveIdx];
+
+        // Perform the swap: move piece into empty slot, old piece slot becomes empty
+        neighborState[emptyIdx] = tileValueMoved;
+        neighborState[pieceToMoveIdx] = 0; // New empty slot
+
+        const neighborStateStr = neighborState.toString();
+        if (closedSet.has(neighborStateStr)) {
+          continue;
+        }
+
+        const gScore = currentNode.g + 1;
+        const hScore = this.getManhattanDistance(neighborState);
+        const fScore = gScore + hScore;
+
+        // Check if neighbor is in openSet and if this path is better
+        let existingNodeInOpenSet = false;
+        for (let i = 0; i < openSet.length; i++) {
+          if (this.areArraysEqual(openSet[i].state, neighborState)) {
+            if (openSet[i].f <= fScore) {
+              existingNodeInOpenSet = true;
+            } else {
+              // Found a better path to this existing node, remove old one
+              openSet.splice(i, 1);
+            }
+            break;
+          }
+        }
+
+        if (existingNodeInOpenSet) {
+          continue;
+        }
+
+        // Action: { tileValue, fromIndex (original tile index), toIndex (empty slot index) }
+        const action = { tileValue: tileValueMoved, fromIndex: pieceToMoveIdx, toIndex: emptyIdx };
+        const neighborNode = this._createSearchNode(neighborState, currentNode, action, gScore, hScore);
+
+        openSet.push(neighborNode);
+        closedSet.add(neighborStateStr); // Add to closed set when expanded or pushed to open
+      }
+    }
+    return null; // No solution found
+  },
+
+  solveWithBot: function() {
+    $('#bot_message').text("Solving, please wait...");
+    $('#solve, #mix').prop('disabled', true);
+
+    // Allows UI to update before potentially long A* execution
+    setTimeout(() => {
+      // aStarSearch calls getBoardState itself if it needs the current state.
+      // Pass nothing to aStarSearch if it's designed to fetch current state.
+      this.currentSolutionActions = this.aStarSearch();
+
+      if (this.currentSolutionActions && this.currentSolutionActions.length > 0) {
+        $('#bot_message').text("Solution found! Animating " + this.currentSolutionActions.length + " moves...");
+        this.animateSolution();
+      } else if (this.currentSolutionActions && this.currentSolutionActions.length === 0) {
+        // This case means aStarSearch found the board is already solved.
+        // The message "Board is already solved!" is set by aStarSearch.
+        $('#solve, #mix').prop('disabled', false);
+      } else { // null solution
+        $('#bot_message').text("No solution found for the current board configuration.");
+        $('#solve, #mix').prop('disabled', false);
+      }
+    }, 50);
+  },
+
+  bindSquareClicks: function() {
+    $(".square").off("click", this.boundHandleSquareClick).on("click", this.boundHandleSquareClick);
+  },
+
+  animateSolution: function() {
+    if (!this.currentSolutionActions || this.currentSolutionActions.length === 0) {
+      $('#bot_message').text("No solution to animate or already solved.");
+      $('#solve, #mix').prop('disabled', false);
+      this.bindSquareClicks(); // Ensure clicks are enabled
+      return;
+    }
+
+    // Disable square clicks during animation
+    $(".square").off("click");
+    // Buttons Solve and Mix are already disabled by solveWithBot
+
+    let moveIndex = 0;
+    const animationSpeed = 500; // ms per move
+
+    const performNextMove = () => {
+      if (moveIndex >= this.currentSolutionActions.length) {
+        $('#bot_message').text("Animation complete!");
+        $('#solve, #mix').prop('disabled', false);
+        this.bindSquareClicks(); // Re-enable square clicks
+        this.currentSolutionActions = []; // Clear actions
+        if(this.isOk()){ // Check if board is solved, then show success
+            $('.square div').addClass('success');
+            setTimeout(() => { $('.game').fadeOut('slow'); }, 500);
+            setTimeout(() => {
+                const msg = '<h1>Parabéns!!!</h1><a href="index.html" class="btn">Jogar Novamente</a>';
+                $('.game').html(msg).fadeIn('slow');
+            }, 1000);
+        }
+        return;
+      }
+
+      const action = this.currentSolutionActions[moveIndex];
+      // action is { tileValue, fromIndex (of tile), toIndex (of empty spot where tile moves) }
+
+      // The tile that will move is at 'fromIndex'. Its ID is '#sq-(fromIndex+1)'
+      const tileToMoveSquareId = '#sq-' + (action.fromIndex + 1);
+      // The empty spot where this tile will move is 'toIndex'. Its ID is '#sq-(toIndex+1)'
+      // This 'toIndex' should correspond to the current this.freeSquareId for the move function.
+      const targetEmptySpotSquareId = '#sq-' + (action.toIndex + 1);
+
+      // Verify this.freeSquareId matches where the tile is supposed to go
+      if (this.freeSquareId !== targetEmptySpotSquareId) {
+          console.error("Animation Error: Mismatch between this.freeSquareId (" + this.freeSquareId + ") and action's target empty spot (" + targetEmptySpotSquareId + "). Action:", action);
+          $('#bot_message').text("Animation error. Please reset.");
+          $('#solve, #mix').prop('disabled', false);
+          this.bindSquareClicks();
+          return;
+      }
+
+      this.move(tileToMoveSquareId, targetEmptySpotSquareId); // piece at tileToMoveSquareId moves into targetEmptySpotSquareId
+      $('#moves_num').html('# of moves: ' + (moveIndex + 1) + ' (Bot)');
+
+      moveIndex++;
+      setTimeout(performNextMove, animationSpeed);
+    };
+
+    performNextMove(); // Start the animation sequence
   }
 };
 

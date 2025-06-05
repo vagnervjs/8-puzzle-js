@@ -8,9 +8,9 @@
 }
 
 body {
-    font-family: 'Roboto', Arial, sans-serif; /* Using Roboto from Google Fonts if available, otherwise fallbacks */
-    color: #2F4F4F; /* Dark Slate Gray */
-    background-color: #E0F2F1; /* Very Light Mint/Cyan */
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #2F4F4F;
+    background-color: #E0F2F1;
     margin: 0;
     padding: 0;
     line-height: 1.6;
@@ -20,20 +20,20 @@ body {
 header {
     text-align: center;
     padding: 15px 10px;
-    margin-bottom: 15px; /* Space below header */
+    margin-bottom: 15px;
 }
 
 header h1 {
-    font-size: 2.2em; /* Slightly smaller for compact layout */
-    color: #004D40; /* Dark Teal */
+    font-size: 2.2em;
+    color: #004D40;
     margin-bottom: 0.15em;
     margin-top: 0;
 }
 
 header h2 {
-    font-size: 1.3em; /* Slightly smaller for compact layout */
-    color: #00695C; /* Medium Teal */
-    font-weight: 400; /* Lighter than h1 */
+    font-size: 1.3em;
+    color: #00695C;
+    font-weight: 400;
     margin-top: 0;
     margin-bottom: 0;
 }
@@ -52,31 +52,31 @@ header h2 {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 12px; /* Slightly reduced spacing between items */
+    gap: 12px;
     margin-top: 15px;
     margin-bottom: 15px;
     padding: 12px;
-    background-color: #FFFFFF; /* White background for options area */
+    background-color: #FFFFFF;
     border-radius: 8px;
     box-shadow: 0 1px 5px rgba(0,0,0,0.08);
 }
 
 /* Buttons Styling */
-.btn, button#mix, button#solve { /* Apply to general .btn and specific IDs */
-    background-color: #FFDAB9; /* Soft Coral / Peach Puff */
-    color: #2F4F4F; /* Dark Slate Gray text */
+.btn, button#mix, button#solve {
+    background-color: #FFDAB9;
+    color: #2F4F4F;
     border: none;
-    padding: 8px 16px; /* Slightly smaller padding for compact layout */
+    padding: 8px 16px;
     border-radius: 8px;
-    font-size: 0.95em; /* Slightly smaller font for compact layout */
-    font-family: inherit; /* Inherit font from body */
+    font-size: 0.95em;
+    font-family: inherit;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .btn:hover, button#mix:hover, button#solve:hover {
-    background-color: #FFE4C4; /* Lighter Soft Coral / Bisque */
+    background-color: #FFE4C4;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
@@ -89,7 +89,7 @@ header h2 {
 .btn:disabled, button#mix:disabled, button#solve:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: #F0E68C; /* Khaki - more distinct disabled state */
+    background-color: #F0E68C;
     box-shadow: none;
     transform: translateY(0px);
 }
@@ -98,28 +98,28 @@ header h2 {
 input#moves {
     padding: 8px;
     border-radius: 8px;
-    border: 1px solid #CFD8DC; /* Soft Gray border */
+    border: 1px solid #CFD8DC;
     font-size: 0.95em;
     font-family: inherit;
-    max-width: 110px; /* Slightly smaller for compact layout */
+    max-width: 110px;
     text-align: center;
 }
 
 input#moves:focus {
     outline: none;
-    border-color: #00796B; /* Teal focus color */
+    border-color: #00796B;
     box-shadow: 0 0 0 2px rgba(0, 121, 107, 0.2);
 }
 
 /* Message Paragraphs (#moves_num, #bot_message) */
 p#moves_num, p#bot_message {
-    min-height: 1.2em; /* Prevent layout shifts */
+    min-height: 1.2em;
     font-size: 0.95em;
-    color: #2F4F4F; /* Dark Slate Gray */
-    margin: 0; /* Reset margin */
-    padding: 5px 0; /* Add some vertical padding */
-    text-align: center; /* Center align messages */
-    flex-basis: 100%; /* Make them take full width in flex container if needed */
+    color: #2F4F4F;
+    margin: 0;
+    padding: 5px 0;
+    text-align: center;
+    flex-basis: 100%;
 }
 
 /* Footer Styles */
@@ -128,8 +128,8 @@ footer {
     margin-top: 20px;
     padding: 10px;
     font-size: 0.8em;
-    color: #555; /* Medium Gray */
-    border-top: 1px solid #CFD8DC; /* Light Gray border */
+    color: #555;
+    border-top: 1px solid #CFD8DC;
 }
 
 
@@ -142,20 +142,17 @@ ul {
 }
 
 
-/* .game is the direct parent of the <ul> for squares */
 .game {
 	width: 300px;
 	height: 300px;
-	margin: 25px auto 35px auto; /* Reduced margins for compact layout while preserving 3D visibility */
-    perspective: 1000px; /* Create 3D space for children */
+	margin: 25px auto 35px auto;
+    perspective: 1000px;
 }
-
-/* The <ul> holding the squares */
 .game ul {
     padding: 0;
     margin: 0 auto;
-    width: 100%; /* Take width of .game container */
-    display: grid; /* Using Grid for layout */
+    width: 100%;
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     gap: 4px;
@@ -163,9 +160,9 @@ ul {
     border-radius: 10px;
     background-color: #BDBDBD;
     padding: 4px;
-    transform-style: preserve-3d; /* Enable 3D space for children (squares) */
-    transform: rotateX(20deg); /* Tilt the board slightly */
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.15); /* Shadow for the board */
+    transform-style: preserve-3d;
+    transform: rotateX(20deg);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.15);
 }
 
 /* Individual <li> square */

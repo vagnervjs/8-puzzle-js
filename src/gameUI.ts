@@ -26,9 +26,7 @@ export class GameUIController {
     private readonly botMessageArea: HTMLParagraphElement | null;
     private readonly gameArea: HTMLDivElement | null;
     private readonly squares: NodeListOf<HTMLLIElement>;
-
-    /** Duration for tile movement animations in milliseconds. */
-    private readonly animationDuration: number = 300; // Should match CSS transition on .square
+    private readonly animationDuration: number = 300;
 
     constructor() {
         this.mixButton = qs<HTMLButtonElement>("#mix");
@@ -86,7 +84,6 @@ export class GameUIController {
             if (disabled) {
                 square.removeEventListener("click", this.boundHandleSquareClick);
             } else {
-                // Re-bind click
                 square.removeEventListener("click", this.boundHandleSquareClick);
                 square.addEventListener("click", this.boundHandleSquareClick);
             }
@@ -107,9 +104,9 @@ export class GameUIController {
         const currentBoardState = this.getBoardStateFromDOM();
         if (isBoardSolved(currentBoardState)) {
             this.displayMessage("Congratulations! You solved it!", "success");
-            await this.triggerWinAnimation(); // Disables interaction at the end
+            await this.triggerWinAnimation();
         } else {
-            this.toggleSquareInteraction(false); // Re-enable if not solved
+            this.toggleSquareInteraction(false);
             this.toggleControlButtons(false);
         }
     }

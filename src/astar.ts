@@ -97,6 +97,33 @@ function reconstructPath(node: SearchNode): SearchNodeAction[] {
 }
 
 /**
+ * Checks if a board configuration is solvable for the 8-puzzle.
+ * For a 3x3 puzzle, a configuration is solvable if and only if 
+ * the number of inversions is even (when the blank space is ignored).
+ * An inversion is when a larger numbered tile appears before a smaller numbered tile
+ * when reading the board from left to right, top to bottom (excluding the blank).
+ * @param boardState The board configuration to check.
+ * @returns `true` if the board is solvable, `false` otherwise.
+ */
+function isSolvable(boardState: BoardState): boolean {
+  // Extract only the numbered tiles (exclude 0 and null)
+  const tiles: number[] = boardState.filter(tile => tile !== 0 && tile !== null) as number[];
+  
+  // Count inversions
+  let inversions = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    for (let j = i + 1; j < tiles.length; j++) {
+      if (tiles[i] > tiles[j]) {
+        inversions++;
+      }
+    }
+  }
+  
+  // For a 3x3 puzzle, configuration is solvable if inversions are even
+  return inversions % 2 === 0;
+}
+
+/**
  * Performs an A* search to find the optimal sequence of moves to solve the puzzle.
  * @param initialState The starting configuration of the puzzle board ({@link BoardState}).
  * @param adjacencyMap A {@link PosMap} defining the adjacency of squares, used to generate valid moves.
@@ -110,6 +137,11 @@ export function performAStarSearch(
 ): SearchNodeAction[] | null {
   if (areArraysEqual(initialState, GOAL_STATE)) {
     return []; // Already solved
+  }
+
+  // Check if the initial state is solvable
+  if (!isSolvable(initialState)) {
+    return null; // Board configuration is unsolvable
   }
 
   const startNode: SearchNode = _createSearchNode(
@@ -127,7 +159,12 @@ export function performAStarSearch(
   const closedSet: Set<string> = new Set();
   closedSet.add(initialState.toString());
 
-  while (openSet.length > 0) {
+  // Add iteration limit as safety measure
+  const MAX_ITERATIONS = 100000; // Reasonable limit for 8-puzzle
+  let iterations = 0;
+
+  while (openSet.length > 0 && iterations < MAX_ITERATIONS) {
+    iterations++;
     // Simple array sort acts as a basic priority queue (less efficient for large sets).
     openSet.sort((a, b) => a.f - b.f);
     const currentNode: SearchNode | undefined = openSet.shift(); // Get node with the lowest f-score
@@ -212,5 +249,10 @@ export function performAStarSearch(
       closedSet.add(neighborStateStr); // Add to closedSet when it's scheduled for evaluation
     }
   }
+
+  if (iterations >= MAX_ITERATIONS) {
+    console.warn(`A* search reached maximum iterations (${MAX_ITERATIONS}) without finding a solution.`);
+  }
+
   return null; // No solution found
 }

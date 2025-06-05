@@ -28,14 +28,4 @@ onDocumentReady(() => {
   new GameUIController();
 });
 
-// Example: For debugging purposes, one might expose the instance to the window:
-//
-// onDocumentReady(() => {
-//   const gameInstance = new GameUIController();
-//   (window as any).currentGameInstance = gameInstance;
-//   console.log("Game instance available on window.currentGameInstance for debugging.");
-// });
 
-// The previous monolithic 'Game' object has been refactored and its responsibilities
-// have been distributed across the more modular structure outlined above.
-// This `main.ts` file now serves only as the clean entry point to bootstrap the application.

@@ -1,4 +1,4 @@
-import { fadeIn, fadeOut, qs, qsa } from './domUtils';
+import { qs, qsa } from './domUtils';
 import type { BoardState, SearchNodeAction } from './types';
 import { POS_ADJACENCY, NUM_SQUARES, isSolved as isBoardSolved, getIndexFromSquareNumber, getSquareNumberFromIndex } from './puzzleLogic';
 import { performAStarSearch } from './astar';

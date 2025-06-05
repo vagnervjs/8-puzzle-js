@@ -15,10 +15,7 @@ export class GameUIController {
     private solutionActions: SearchNodeAction[] = [];
     /** Bound event handler for square click events to ensure correct `this` context. */
     private readonly boundHandleSquareClick: (event: Event) => Promise<void>;
-    /** Stores the ID of the square whose piece content is being dragged. */
-    private draggedSquareId: string | null = null;
-    /** Flag to indicate if a drag operation is currently in progress. */
-    private isDragging: boolean = false;
+
 
 
     // DOM Element references
@@ -53,8 +50,6 @@ export class GameUIController {
 
     private init(): void {
         this.bindSquareClicks();
-        this.bindDragDropEvents();
-        this.updateDraggableStatus();
 
         this.mixButton?.addEventListener("click", this.handleMixClick.bind(this));
         this.solveButton?.addEventListener("click", this.handleSolveClick.bind(this));
@@ -84,132 +79,21 @@ export class GameUIController {
         });
     }
 
-    private bindDragDropEvents(): void {
-        this.squares.forEach(square => {
-            square.addEventListener('dragover', this.handleDragOver.bind(this));
-            square.addEventListener('drop', this.handleDrop.bind(this));
-            // Optional: Add dragenter/dragleave for visual feedback on drop target
-            // square.addEventListener('dragenter', (e) => (e.currentTarget as HTMLElement).classList.add('drag-over'));
-            // square.addEventListener('dragleave', (e) => (e.currentTarget as HTMLElement).classList.remove('drag-over'));
 
-
-            const pieceContent = square.firstElementChild as HTMLElement | null;
-            if (pieceContent) { // All squares might have a div, but only non-free are draggable initially
-                pieceContent.addEventListener('dragstart', this.handleDragStart.bind(this));
-                pieceContent.addEventListener('dragend', this.handleDragEnd.bind(this));
-            }
-        });
-    }
-
-    private setDraggable(squareElement: HTMLLIElement, isDraggable: boolean): void {
-        const pieceContent = squareElement.firstElementChild as HTMLElement | null;
-        if (pieceContent) {
-            pieceContent.draggable = isDraggable;
-            if(isDraggable) {
-                squareElement.classList.remove("non-draggable-square");
-            } else {
-                squareElement.classList.add("non-draggable-square");
-            }
-        }
-    }
-
-    private updateDraggableStatus(): void {
-        this.squares.forEach(square => {
-            const isFree = square.classList.contains('free');
-            this.setDraggable(square, !isFree);
-        });
-    }
 
     private toggleSquareInteraction(disabled: boolean): void {
         this.squares.forEach(square => {
             if (disabled) {
                 square.removeEventListener("click", this.boundHandleSquareClick);
-                // Set all pieces to non-draggable
-                this.setDraggable(square, false);
             } else {
                 // Re-bind click
                 square.removeEventListener("click", this.boundHandleSquareClick);
                 square.addEventListener("click", this.boundHandleSquareClick);
-                // Set draggable based on whether the square is free or not
-                this.setDraggable(square, !square.classList.contains('free'));
             }
         });
-        // Ensure consistent state after bulk operation
-        if (!disabled) {
-            this.updateDraggableStatus();
-        }
     }
 
-    private handleDragStart(event: DragEvent): void {
-        this.isDragging = true; // Set flag
-        const pieceContent = event.target as HTMLElement;
-        const squareElement = pieceContent.parentElement as HTMLLIElement | null;
 
-        if (squareElement && !squareElement.classList.contains('free')) {
-            this.draggedSquareId = squareElement.id;
-            event.dataTransfer?.setData('text/plain', squareElement.id);
-            if(event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-            pieceContent.classList.add('dragging'); // Visual feedback
-        } else {
-            event.preventDefault();
-        }
-    }
-
-    private handleDragEnd(event: DragEvent): void {
-        this.isDragging = false; // Reset flag
-        this.draggedSquareId = null; // Ensure draggedSquareId is cleared on drag end
-        const pieceContent = event.target as HTMLElement;
-        if (pieceContent) { // Check if target is indeed the piece content
-            pieceContent.classList.remove('dragging'); // Clean up visual feedback
-        }
-    }
-
-    private handleDragOver(event: DragEvent): void {
-        event.preventDefault();
-        if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = 'move';
-        }
-        // const targetSquare = event.currentTarget as HTMLLIElement;
-        // if (targetSquare.classList.contains('free')) {
-        //     targetSquare.classList.add('drag-over-active-class'); // Add class for visual feedback
-        // }
-    }
-
-    private async handleDrop(event: DragEvent): Promise<void> {
-        event.preventDefault();
-        // const targetSquareElement = event.currentTarget as HTMLLIElement;
-        // targetSquareElement.classList.remove('drag-over-active-class'); // Remove visual feedback
-
-        const targetSquareElement = event.currentTarget as HTMLLIElement;
-        const sourceSquareDomId = event.dataTransfer?.getData('text/plain');
-
-        if (!sourceSquareDomId || !this.draggedSquareId || sourceSquareDomId !== this.draggedSquareId) {
-            console.warn("Drop event with invalid or mismatched draggedSquareId.", { sourceSquareDomId, dragged: this.draggedSquareId});
-            this.draggedSquareId = null; // Reset if invalid
-            this.isDragging = false; // Ensure isDragging is reset
-            return;
-        }
-
-        if (!targetSquareElement.classList.contains('free') || `#${targetSquareElement.id}` !== this.freeSquareId) {
-            this.draggedSquareId = null; // Reset
-            this.isDragging = false; // Ensure isDragging is reset
-            return;
-        }
-
-        const draggedFromSquareIdCurrent = this.draggedSquareId; // Keep for the call
-        this.draggedSquareId = null; // Reset for next drag operation
-        // isDragging is reset in dragend, or here if we want to be quicker for logic
-
-        const sourceSqNum = parseInt(draggedFromSquareIdCurrent.split('-')[1]!, 10);
-        const targetSqNum = parseInt(targetSquareElement.id.split('-')[1]!, 10);
-
-        if (POS_ADJACENCY[sourceSqNum]?.includes(targetSqNum)) {
-            await this.handleMoveLogic(draggedFromSquareIdCurrent, `#${targetSquareElement.id}`);
-        } else {
-            console.warn("Invalid drop: piece cannot move to target square.");
-        }
-        // isDragging will be reset by handleDragEnd
-    }
 
     private async handleMoveLogic(sourceSquareDomId: string, targetSquareDomId: string): Promise<void> {
         this.toggleSquareInteraction(true);
@@ -225,7 +109,7 @@ export class GameUIController {
             this.displayMessage("Congratulations! You solved it!", "success");
             await this.triggerWinAnimation(); // Disables interaction at the end
         } else {
-            this.toggleSquareInteraction(false); // Re-enable if not solved (this calls updateDraggableStatus)
+            this.toggleSquareInteraction(false); // Re-enable if not solved
             this.toggleControlButtons(false);
         }
     }
@@ -292,10 +176,6 @@ export class GameUIController {
     }
 
     private async handleSquareClick(event: Event): Promise<void> {
-        if (this.isDragging) {
-            this.isDragging = false; // Reset flag if a click occurs after a drag operation
-            return;
-        }
         const clickedSquareElement = event.currentTarget as HTMLLIElement | null;
         if (!clickedSquareElement?.id || clickedSquareElement.classList.contains('free')) return;
 
@@ -319,10 +199,10 @@ export class GameUIController {
             }
         });
         if (this.botMessageArea) {
-            this.botMessageArea.innerHTML = '<h1>Parabéns!!!</h1><button id="play_again" class="btn">Jogar Novamente</button>';
+            this.botMessageArea.innerHTML = '<h1>Congratulations!!!</h1><button id="play_again" class="btn">Play Again</button>';
             this.botMessageArea.classList.add('win-display');
             this.botMessageArea.style.display = 'block';
-            qs<HTMLButtonElement>('#play_again', this.botMessageArea)?.addEventListener('click', () => window.location.reload());
+            this.botMessageArea.querySelector<HTMLButtonElement>('#play_again')?.addEventListener('click', () => window.location.reload());
         }
         this.toggleSquareInteraction(true);
         this.toggleControlButtons(true);
@@ -378,7 +258,7 @@ export class GameUIController {
         this.updateMovesCounter(successfulMixMoves, 'Mix');
         this.displayMessage(`Shuffled ${successfulMixMoves} times. Good luck!`, "info");
         this.toggleControlButtons(false);
-        this.toggleSquareInteraction(false); // This will call updateDraggableStatus
+        this.toggleSquareInteraction(false);
         this.currentMoves = 0;
     }
 
@@ -439,7 +319,7 @@ export class GameUIController {
 
             await this.movePieceOnDOM(pieceSquareIdToMove, targetEmptySquareId);
             this.updateMovesCounter(moveIndex + 1, 'Bot');
-            // this.updateDraggableStatus(); // Not strictly needed as interaction is disabled
+
             moveIndex++;
             setTimeout(performNextMove, this.animationDuration + 100);
         };

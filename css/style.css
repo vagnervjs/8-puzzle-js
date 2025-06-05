@@ -19,27 +19,30 @@ body {
 /* Header Styles */
 header {
     text-align: center;
-    padding: 20px 10px;
-    margin-bottom: 20px; /* Space below header */
+    padding: 15px 10px;
+    margin-bottom: 15px; /* Space below header */
 }
 
 header h1 {
-    font-size: 2.5em; /* Responsive font size */
+    font-size: 2.2em; /* Slightly smaller for compact layout */
     color: #004D40; /* Dark Teal */
-    margin-bottom: 0.25em;
+    margin-bottom: 0.15em;
+    margin-top: 0;
 }
 
 header h2 {
-    font-size: 1.5em; /* Responsive font size */
+    font-size: 1.3em; /* Slightly smaller for compact layout */
     color: #00695C; /* Medium Teal */
     font-weight: 400; /* Lighter than h1 */
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 /* Main App Container */
 .app-container {
     max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
+    margin: 10px auto;
+    padding: 15px;
     /* background-color: #FFFFFF; Optional: if a white card background is desired */
     /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); Optional: subtle shadow */
     border-radius: 8px; /* Optional: if container has a background */
@@ -51,10 +54,10 @@ header h2 {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 15px; /* Spacing between items */
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 15px;
+    gap: 12px; /* Slightly reduced spacing between items */
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding: 12px;
     background-color: #FFFFFF; /* White background for options area */
     border-radius: 8px;
     box-shadow: 0 1px 5px rgba(0,0,0,0.08);
@@ -65,9 +68,9 @@ header h2 {
     background-color: #FFDAB9; /* Soft Coral / Peach Puff */
     color: #2F4F4F; /* Dark Slate Gray text */
     border: none;
-    padding: 10px 20px;
+    padding: 8px 16px; /* Slightly smaller padding for compact layout */
     border-radius: 8px;
-    font-size: 1em;
+    font-size: 0.95em; /* Slightly smaller font for compact layout */
     font-family: inherit; /* Inherit font from body */
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
@@ -95,12 +98,12 @@ header h2 {
 
 /* Input Field (#moves) */
 input#moves {
-    padding: 10px;
+    padding: 8px;
     border-radius: 8px;
     border: 1px solid #CFD8DC; /* Soft Gray border */
-    font-size: 1em;
+    font-size: 0.95em;
     font-family: inherit;
-    max-width: 120px; /* Slightly wider for numbers */
+    max-width: 110px; /* Slightly smaller for compact layout */
     text-align: center;
 }
 
@@ -124,9 +127,9 @@ p#moves_num, p#bot_message {
 /* Footer Styles */
 footer {
     text-align: center;
-    margin-top: 30px;
-    padding: 15px;
-    font-size: 0.85em;
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 0.8em;
     color: #555; /* Medium Gray */
     border-top: 1px solid #CFD8DC; /* Light Gray border */
 }
@@ -147,9 +150,9 @@ a { text-decoration: none; } /* Good general reset */
 
 /* .game is the direct parent of the <ul> for squares */
 .game {
-	width: 324px;
-	height: 324px;
-	margin: 40px auto 60px auto; /* Increased top/bottom margin for 3D effect visibility */
+	width: 300px;
+	height: 300px;
+	margin: 25px auto 35px auto; /* Reduced margins for compact layout while preserving 3D visibility */
     perspective: 1000px; /* Create 3D space for children */
 }
 
@@ -173,12 +176,12 @@ a { text-decoration: none; } /* Good general reset */
 
 /* Individual <li> square */
 .square {
-	width: 100px;
-	height: 100px;
+	width: 92px;
+	height: 92px;
 	list-style: none;
     border: 1px solid #D8BFD8; /* Darker Lavender for tile "sides" effect */
 	text-align: center;
-	font-size: 2.5em;
+	font-size: 2.2em; /* Slightly smaller for compact layout */
 	font-weight: bold;
 	border-radius: 8px;
 	cursor: pointer;
@@ -291,4 +294,83 @@ a { text-decoration: none; } /* Good general reset */
 #bot_message.win-display .btn#play_again:hover {
     background-color: #4CAF50; /* Darker Green on hover */
     box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+/* ======================
+   Responsive Design for Small Screens
+   ====================== */
+
+/* Media query for MacBook 13-inch and smaller screens */
+@media screen and (max-height: 900px) {
+    /* Further reduce spacing for smaller screens */
+    header {
+        padding: 12px 10px;
+        margin-bottom: 12px;
+    }
+    
+    header h1 {
+        font-size: 2em;
+        margin-bottom: 0.1em;
+    }
+    
+    header h2 {
+        font-size: 1.2em;
+    }
+    
+    .app-container {
+        margin: 8px auto;
+        padding: 12px;
+    }
+    
+    .game {
+        width: 280px;
+        height: 280px;
+        margin: 20px auto 30px auto;
+    }
+    
+    .square {
+        width: 86px;
+        height: 86px;
+        font-size: 2em;
+    }
+    
+    .options {
+        margin-top: 12px;
+        margin-bottom: 12px;
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    footer {
+        margin-top: 15px;
+        padding: 8px;
+        font-size: 0.75em;
+    }
+}
+
+/* Media query for very small screens */
+@media screen and (max-height: 700px) {
+    body {
+        font-size: 0.9em;
+    }
+    
+    header h1 {
+        font-size: 1.8em;
+    }
+    
+    header h2 {
+        font-size: 1.1em;
+    }
+    
+    .game {
+        width: 260px;
+        height: 260px;
+        margin: 15px auto 25px auto;
+    }
+    
+    .square {
+        width: 80px;
+        height: 80px;
+        font-size: 1.8em;
+    }
 }

@@ -8,7 +8,7 @@
     "test:ui": "npx vitest --ui",
     "build:tsc": "tsc",
     "build": "npx esbuild src/main.ts --bundle --outfile=dist/main.js --platform=browser --format=esm --sourcemap",
-    "dev": "npx vitest"
+    "dev": "vite"
   },
   "keywords": [
     "8-puzzle",
@@ -21,6 +21,7 @@
     "@vitest/ui": "^3.2.1",
     "esbuild": "^0.25.5",
     "typescript": "^5.8.3",
+    "vite": "^6.3.5",
     "vitest": "^3.2.1"
   }
 }

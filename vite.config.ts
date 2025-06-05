@@ -16,8 +16,9 @@ export default defineConfig({
     // to avoid conflict if someone runs `vite build`.
     // Or, more simply, ensure our `npm run build` uses esbuild and
     // `npm run dev` uses Vite's dev server.
-    outDir: 'dist_vite', // Default is 'dist', could conflict if not careful
-    sourcemap: true,
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: true, // Or remove to use production default
   },
   // Ensure Vitest can also use this config if needed, though Vitest has its own config usually.
   // For now, this is primarily for Vite's dev server and `vite build`.

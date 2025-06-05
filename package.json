@@ -6,8 +6,7 @@
   "scripts": {
     "test": "npx vitest run",
     "test:ui": "npx vitest --ui",
-    "build:tsc": "tsc",
-    "build": "npx esbuild src/main.ts --bundle --outfile=dist/main.js --platform=browser --format=esm --sourcemap",
+    "build": "vite build",
     "dev": "vite"
   },
   "keywords": [

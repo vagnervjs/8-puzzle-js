@@ -1,0 +1,26 @@
+{
+  "name": "8-puzzle-js-modernized",
+  "version": "1.0.0",
+  "description": "Modernized 8-puzzle game",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "npx vitest run",
+    "test:ui": "npx vitest --ui",
+    "build": "npx vite build",
+    "dev": "npx vite"
+  },
+  "keywords": [
+    "8-puzzle",
+    "typescript",
+    "vitest"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitest/ui": "^3.2.1",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.1"
+  }
+}

@@ -1,69 +1,68 @@
 <!-- ======================
-Jogo dos Quadrados
-Inteligência Artificial
+8-Puzzle Game
+Artificial Intelligence
 FCT - Unesp
 Author: Vagner Santana
 RA: 1288549
-v0.1
-File: style.css
 ====================== -->
 
 <!doctype html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Jogo dos Quadrados - Vagner Santana | IA</title>
+	<title>8-Puzzle Game - Vagner Santana | AI</title>
 	<link rel="stylesheet" href="css/style.css">
-	<link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
 </head>
 <body>
-	<header>
-		<h1>Jogo dos Quadrados</h1>
-		<h2>Inteligência Artificial</h2>
-	</header>
+	<main class="app-container">
+		<header>
+			<h1>8-Puzzle Game</h1>
+			<h2>Artificial Intelligence</h2>
+		</header>
 
-	<div class="game">
-		<ul>
-			<li id="sq-1" class="square">
-				<div id="pc-1">1</div>
-			</li>
-			<li id="sq-2" class="square">
-				<div id="pc-2">2</div>
-			</li>
-			<li id="sq-3" class="square">
-				<div id="pc-3">3</div>
-			</li>
-			<li id="sq-4" class="square">
-				<div id="pc-4">4</div>
-			</li>
-			<li id="sq-5" class="square">
-				<div id="pc-5">5</div>
-			</li>
-			<li id="sq-6" class="square">
-				<div id="pc-6">6</div>
-			</li>
-			<li id="sq-7" class="square">
-				<div id="pc-7">7</div>
-			</li>
-			<li id="sq-8" class="square">
-				<div id="pc-8">8</div>
-			</li>
-			<li id="sq-9" class="square free">
-			</li>
-		</ul>
-	</div>
-	<div class="options">
-		<button id="mix" class="btn">Embaralhar</button>
-		<input type="number" id="moves" value="" placeholder="# of moves">
-		<p id="moves_num" class="rg"></p>
-	</div>
+		<div class="game">
+			<ul>
+				<li id="sq-1" class="square">
+					<div id="pc-1">1</div>
+				</li>
+				<li id="sq-2" class="square">
+					<div id="pc-2">2</div>
+				</li>
+				<li id="sq-3" class="square">
+					<div id="pc-3">3</div>
+				</li>
+				<li id="sq-4" class="square">
+					<div id="pc-4">4</div>
+				</li>
+				<li id="sq-5" class="square">
+					<div id="pc-5">5</div>
+				</li>
+				<li id="sq-6" class="square">
+					<div id="pc-6">6</div>
+				</li>
+				<li id="sq-7" class="square">
+					<div id="pc-7">7</div>
+				</li>
+				<li id="sq-8" class="square">
+					<div id="pc-8">8</div>
+				</li>
+				<li id="sq-9" class="square free">
+				</li>
+			</ul>
+		</div>
+		<div class="options">
+			<button id="mix" class="btn">Shuffle</button>
+			<button id="solve" class="btn">Solve with Bot</button>
+			<input type="number" id="moves" value="" placeholder="# of moves">
+			<p id="moves_num"></p>
+			<p id="bot_message"></p>
+		</div>
 
-	<footer>
-		<p>Autor: Vagner José Santana</p>
-	</footer>
+		<footer>
+			<p>Author: Vagner Santana | <a href="https://github.com/vagnervjs/8-puzzle-js" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
+		</footer>
+	</main>
 
-	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
-	<script src="js/ia.js" ></script>
+	<script type="module" src="/src/main.ts"></script>
 </body>
 </html>

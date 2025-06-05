@@ -253,3 +253,41 @@ a { text-decoration: none; } /* Good general reset */
 .square div {
     color: #424242; /* Darker Gray for better contrast on pastel pieces */
 }
+
+/* Win Message Display Styles */
+#bot_message.win-display {
+    text-align: center;
+    padding: 25px; /* Increased padding */
+    background-color: rgba(230, 255, 230, 0.97); /* Light Minty Green, slightly more opaque */
+    border: 1px solid #81C784; /* Green border */
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 100, 0, 0.25); /* Greenish shadow */
+    margin: 20px auto;
+    max-width: 320px; /* Adjusted width */
+    /* Ensure it appears above other elements if needed, though typically flow is fine */
+    position: relative;
+    z-index: 200; /* Above game pieces if any overlap was possible */
+}
+
+#bot_message.win-display h1 {
+    color: #388E3C; /* Darker, vibrant green */
+    margin-top: 0; /* Remove default h1 margin if any */
+    margin-bottom: 15px;
+    font-size: 2.2em;
+    font-weight: bold;
+}
+
+/* Ensure .btn style applies to #play_again button within win message */
+#bot_message.win-display .btn#play_again {
+    /* Inherits .btn styles, can add specific overrides here */
+    background-color: #66BB6A; /* Softer Green, matching success tiles */
+    color: white;
+    font-size: 1.1em; /* Slightly larger play again button */
+    padding: 12px 25px;
+    margin-top: 10px;
+}
+
+#bot_message.win-display .btn#play_again:hover {
+    background-color: #4CAF50; /* Darker Green on hover */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}

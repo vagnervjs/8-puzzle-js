@@ -15,6 +15,8 @@ export class GameUIController {
     private solutionActions: SearchNodeAction[] = [];
     /** Bound event handler for square click events to ensure correct `this` context. */
     private readonly boundHandleSquareClick: (event: Event) => Promise<void>;
+    /** Stores the ID of the square being dragged. */
+    private draggedSquareId: string | null = null;
 
     // DOM Element references
     private readonly mixButton: HTMLButtonElement | null;
@@ -28,9 +30,6 @@ export class GameUIController {
     /** Duration for tile movement animations in milliseconds. */
     private readonly animationDuration: number = 300; // Should match CSS transition on .square
 
-    /**
-     * Initializes the GameUIController, querying DOM elements and setting up initial state.
-     */
     constructor() {
         this.mixButton = qs<HTMLButtonElement>("#mix");
         this.solveButton = qs<HTMLButtonElement>("#solve");
@@ -45,44 +44,36 @@ export class GameUIController {
         }
 
         this.freeSquareId = this.findInitialFreeSquareIdSafe();
-        this.boundHandleSquareClick = this.handleSquareClick.bind(this);
+        this.boundHandleSquareClick = this.handleSquareClick.bind(this); // For click
         this.init();
     }
 
-    /**
-     * Initializes event listeners for UI controls and sets up the initial game UI state.
-     */
     private init(): void {
-        this.bindSquareClicks();
+        this.bindSquareClicks(); // For click interactions
+        this.bindDragDropEvents(); // For D&D interactions
+        this.updateDraggableStatus(); // Set initial draggable states
+
         this.mixButton?.addEventListener("click", this.handleMixClick.bind(this));
         this.solveButton?.addEventListener("click", this.handleSolveClick.bind(this));
         this.updateMovesCounter(0, 'Player');
     }
 
-    /**
-     * Safely finds the initial free square ID from the DOM.
-     */
     private findInitialFreeSquareIdSafe(): string {
         for (const square of Array.from(this.squares)) {
-            if (square.classList.contains('free')) {
-                return `#${square.id}`;
-            }
+            if (square.classList.contains('free')) return `#${square.id}`;
         }
         const lastSquareSelector = `#sq-${NUM_SQUARES}`;
         const lastSquareElement = qs<HTMLLIElement>(lastSquareSelector);
         if (lastSquareElement) {
-            console.warn(`No square initially had the 'free' class. Defaulting to ${lastSquareSelector} and adding 'free' class.`);
+            console.warn(`No square initially had 'free' class. Defaulting to ${lastSquareSelector}.`);
             lastSquareElement.classList.add('free');
             return lastSquareSelector;
         }
-        console.error(`Cannot find the last square (#sq-${NUM_SQUARES}) to designate as free. Defaulting to #sq-9.`);
+        console.error(`Cannot find last square (#sq-${NUM_SQUARES}). Defaulting to #sq-9.`);
         qs<HTMLLIElement>("#sq-9")?.classList.add("free");
         return '#sq-9';
     }
 
-    /**
-     * Binds click event listeners to all puzzle squares.
-     */
     private bindSquareClicks(): void {
         this.squares.forEach(square => {
             square.removeEventListener("click", this.boundHandleSquareClick);
@@ -90,39 +81,153 @@ export class GameUIController {
         });
     }
 
-    /**
-     * Enables or disables click interactions on all puzzle squares.
-     */
-    private toggleSquareInteraction(disabled: boolean): void {
+    private bindDragDropEvents(): void {
         this.squares.forEach(square => {
-            if (disabled) {
-                square.removeEventListener("click", this.boundHandleSquareClick);
-            } else {
-                square.removeEventListener("click", this.boundHandleSquareClick);
-                square.addEventListener("click", this.boundHandleSquareClick);
+            // Events for the square (drop target)
+            square.addEventListener('dragover', this.handleDragOver.bind(this));
+            square.addEventListener('drop', this.handleDrop.bind(this));
+            // Could add dragenter/dragleave for visual feedback on drop target
+
+            // Event for the piece content (draggable item)
+            const pieceContent = square.firstElementChild as HTMLElement | null;
+            if (pieceContent && !square.classList.contains('free')) {
+                pieceContent.addEventListener('dragstart', this.handleDragStart.bind(this));
             }
         });
     }
 
-    /**
-     * Enables or disables the main control buttons.
-     */
+    private setDraggable(squareElement: HTMLLIElement, isDraggable: boolean): void {
+        const pieceContent = squareElement.firstElementChild as HTMLElement | null;
+        if (pieceContent) {
+            pieceContent.draggable = isDraggable;
+            // Optionally, add/remove a class to indicate draggable state visually
+            // if (isDraggable) pieceContent.classList.add('draggable-piece');
+            // else pieceContent.classList.remove('draggable-piece');
+        }
+    }
+
+    private updateDraggableStatus(): void {
+        this.squares.forEach(square => {
+            const isFree = square.classList.contains('free');
+            this.setDraggable(square, !isFree);
+        });
+    }
+
+    private toggleSquareInteraction(disabled: boolean): void {
+        this.squares.forEach(square => {
+            if (disabled) {
+                square.removeEventListener("click", this.boundHandleSquareClick);
+                this.setDraggable(square, false); // No dragging when interaction is disabled
+            } else {
+                // Re-bind click
+                square.removeEventListener("click", this.boundHandleSquareClick);
+                square.addEventListener("click", this.boundHandleSquareClick);
+                // Update draggable status based on whether it's free or not
+                this.setDraggable(square, !square.classList.contains('free'));
+            }
+        });
+        if (disabled) { // If disabling all interactions, ensure no piece is draggable
+            this.squares.forEach(sq => this.setDraggable(sq, false));
+        } else { // If enabling, call updateDraggableStatus to set correctly
+            this.updateDraggableStatus();
+        }
+    }
+
+    private handleDragStart(event: DragEvent): void {
+        const pieceContent = event.target as HTMLElement;
+        const squareElement = pieceContent.parentElement as HTMLLIElement | null;
+
+        if (squareElement && !squareElement.classList.contains('free')) {
+            this.draggedSquareId = squareElement.id;
+            event.dataTransfer?.setData('text/plain', squareElement.id);
+            if(event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+            // Optional: Add a class for visual feedback during drag
+            // pieceContent.classList.add('dragging');
+        } else {
+            event.preventDefault(); // Prevent dragging if not a valid piece
+        }
+    }
+
+    private handleDragOver(event: DragEvent): void {
+        event.preventDefault(); // Necessary to allow drop
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+        // Optional: Add class to potential drop target for visual feedback
+        // const targetSquare = event.currentTarget as HTMLLIElement;
+        // if (targetSquare.classList.contains('free')) {
+        //     targetSquare.classList.add('drag-over-target');
+        // }
+    }
+
+    private async handleDrop(event: DragEvent): Promise<void> {
+        event.preventDefault();
+        const targetSquareElement = event.currentTarget as HTMLLIElement;
+        // Optional: Remove drag-over visual feedback class
+        // targetSquareElement.classList.remove('drag-over-target');
+
+        const sourceSquareDomId = event.dataTransfer?.getData('text/plain');
+
+        if (!sourceSquareDomId || !this.draggedSquareId || sourceSquareDomId !== this.draggedSquareId) {
+            console.warn("Drop event with invalid or mismatched draggedSquareId.", { sourceSquareDomId, dragged: this.draggedSquareId});
+            this.draggedSquareId = null;
+            return;
+        }
+
+        // Ensure the drop target is the currently free square
+        if (!targetSquareElement.classList.contains('free') || `#${targetSquareElement.id}` !== this.freeSquareId) {
+            this.draggedSquareId = null;
+            return; // Not a valid drop (not the free square)
+        }
+
+        const draggedFromSquareId = this.draggedSquareId; // Store before resetting
+        this.draggedSquareId = null; // Reset for next drag operation
+
+        // Validate if the dragged piece can move to the target (free) square
+        const sourceSqNum = parseInt(draggedFromSquareId.split('-')[1]!, 10);
+        const targetSqNum = parseInt(targetSquareElement.id.split('-')[1]!, 10);
+
+        if (POS_ADJACENCY[sourceSqNum]?.includes(targetSqNum)) {
+            // Valid move, call the core move logic
+            await this.handleMoveLogic(draggedFromSquareId, `#${targetSquareElement.id}`);
+        } else {
+            console.warn("Invalid drop: piece cannot move to target square.");
+            // Optional: Visual feedback for invalid drop
+        }
+    }
+
+    /** Core logic for handling a move, used by both click and D&D */
+    private async handleMoveLogic(sourceSquareDomId: string, targetSquareDomId: string): Promise<void> {
+        this.toggleSquareInteraction(true);
+        this.toggleControlButtons(true);
+
+        await this.movePieceOnDOM(sourceSquareDomId, targetSquareDomId);
+
+        this.currentMoves++;
+        this.updateMovesCounter(this.currentMoves, 'Player');
+        this.updateDraggableStatus(); // Update draggable states after move
+
+        const currentBoardState = this.getBoardStateFromDOM();
+        if (isBoardSolved(currentBoardState)) {
+            this.displayMessage("Congratulations! You solved it!", "success");
+            // Buttons and square interaction remain disabled by win
+            await this.triggerWinAnimation(); // toggleSquareInteraction(true) is called in here
+        } else {
+            this.toggleSquareInteraction(false); // Re-enable if not solved
+            this.toggleControlButtons(false);
+        }
+    }
+
     private toggleControlButtons(disabled: boolean): void {
         if (this.mixButton) this.mixButton.disabled = disabled;
         if (this.solveButton) this.solveButton.disabled = disabled;
     }
 
-    /**
-     * Displays a message in the bot message area.
-     */
     private displayMessage(text: string, _type: 'info' | 'error' | 'success' = 'info'): void {
         if (this.botMessageArea) this.botMessageArea.textContent = text;
         else console.warn("Bot message area not found. Message:", text);
     }
 
-    /**
-     * Updates the displayed move counter.
-     */
     private updateMovesCounter(count: number | null, context: 'Player' | 'Bot' | 'Mix'): void {
         if (this.movesNumArea) {
             if (count === null) this.movesNumArea.textContent = "";
@@ -131,18 +236,13 @@ export class GameUIController {
         if (context !== 'Bot') this.currentMoves = count ?? 0;
     }
 
-    /**
-     * Animates the visual movement of a piece on the DOM and updates the logical game state.
-     * The piece in `pieceSquareIdToMove` slides into the `targetFreeSquareId`.
-     * @returns A Promise that resolves when the animation and DOM updates are complete.
-     */
     private movePieceOnDOM(pieceSquareIdToMove: string, targetFreeSquareId: string): Promise<void> {
         const movingSquareEl = qs<HTMLLIElement>(pieceSquareIdToMove);
         const targetSquareEl = qs<HTMLLIElement>(targetFreeSquareId);
 
         if (!movingSquareEl || !targetSquareEl) {
             console.error('Cannot find squares for animation', { pieceSquareIdToMove, targetFreeSquareId });
-            return Promise.resolve(); // Resolve immediately if elements aren't found
+            return Promise.resolve();
         }
         const movingPieceContentEl = movingSquareEl.firstElementChild as HTMLElement | null;
         if (!movingPieceContentEl) {
@@ -156,102 +256,62 @@ export class GameUIController {
             const dx = targetRect.left - movingRect.left;
             const dy = targetRect.top - movingRect.top;
 
-            // 1. Prepare the moving square for animation
-            movingSquareEl.style.zIndex = '100'; // Lift above others
-            // CSS transition for transform is already defined on .square
-
-            // 2. Apply the transform to make it slide and lift
+            movingSquareEl.style.zIndex = '100';
             movingSquareEl.style.transform = `translateX(${dx}px) translateY(${dy}px) translateZ(25px)`;
 
-            // 3. Listen for the end of the transition
             const onTransitionEnd = (event: TransitionEvent) => {
-                // Ensure we're reacting to the transform transition specifically, if other transitions exist
-                if (event.propertyName !== 'transform') return;
-
+                if (event.propertyName !== 'transform' || event.target !== movingSquareEl) return;
                 movingSquareEl.removeEventListener('transitionend', onTransitionEnd);
+                movingSquareEl.style.transition = 'none';
+                movingSquareEl.style.transform = 'translateZ(5px)';
+                movingSquareEl.style.zIndex = '';
+                void movingSquareEl.offsetHeight;
 
-                // 4. Reset visual state of the (now logically empty) movingSquareEl
-                movingSquareEl.style.transition = 'none'; // Disable transitions for immediate reset
-                movingSquareEl.style.transform = 'translateZ(5px)'; // Its resting Z position
-                movingSquareEl.style.zIndex = '';       // Reset z-index
-                void movingSquareEl.offsetHeight;      // Force reflow
-
-                // 5. Perform the DOM content swap and class update
-                targetSquareEl.appendChild(movingPieceContentEl); // Move the piece div
+                targetSquareEl.appendChild(movingPieceContentEl);
                 movingSquareEl.classList.add('free');
                 targetSquareEl.classList.remove('free');
-
-                // 6. Update internal state
                 this.freeSquareId = `#${movingSquareEl.id}`;
 
-                // 7. Re-enable CSS transitions for future interactions (hover, etc.)
-                // The timeout ensures this happens after the "snap back" from 'none'
-                setTimeout(() => {
-                    movingSquareEl.style.transition = ''; // Let CSS class handle it
-                }, 0);
-
-                resolve(); // Animation and DOM update complete
+                setTimeout(() => { movingSquareEl.style.transition = ''; }, 0);
+                resolve();
             };
             movingSquareEl.addEventListener('transitionend', onTransitionEnd);
         });
     }
 
-    /**
-     * Handles click events on puzzle squares.
-     */
     private async handleSquareClick(event: Event): Promise<void> {
         const clickedSquareElement = event.currentTarget as HTMLLIElement | null;
-        if (!clickedSquareElement?.id) return;
+        if (!clickedSquareElement?.id || clickedSquareElement.classList.contains('free')) return; // Can't click free space
 
         const clickedSquareIdNumStr = clickedSquareElement.id.split('-')[1];
-        // Use current this.freeSquareId which is like "#sq-X"
         const freeSquareIdNumStr = this.freeSquareId.startsWith('#sq-') ? this.freeSquareId.substring(4) : null;
+        if (!clickedSquareIdNumStr || !freeSquareIdNumStr) return;
 
-        if (!clickedSquareIdNumStr || !freeSquareIdNumStr) {
-            console.error("Could not parse square IDs for move logic.", { clicked: clickedSquareIdNumStr, free: freeSquareIdNumStr });
-            return;
-        }
         const clickedSquareIdNum = parseInt(clickedSquareIdNumStr, 10);
         const freeSquareIdNum = parseInt(freeSquareIdNumStr, 10);
 
         if (POS_ADJACENCY[clickedSquareIdNum]?.includes(freeSquareIdNum)) {
-            this.toggleSquareInteraction(true); // Disable clicks during animation
-            this.toggleControlButtons(true);    // Disable buttons too
-
-            await this.movePieceOnDOM(`#${clickedSquareElement.id}`, this.freeSquareId);
-
-            this.currentMoves++;
-            this.updateMovesCounter(this.currentMoves, 'Player');
-
-            const currentBoardState = this.getBoardStateFromDOM();
-            if (isBoardSolved(currentBoardState)) {
-                this.displayMessage("Congratulations! You solved it!", "success");
-                // Buttons remain disabled, square interaction remains disabled by win
-                await this.triggerWinAnimation();
-            } else {
-                this.toggleSquareInteraction(false); // Re-enable clicks if not solved
-                this.toggleControlButtons(false);   // Re-enable buttons
-            }
+            await this.handleMoveLogic(`#${clickedSquareElement.id}`, this.freeSquareId);
         }
     }
 
-    /**
-     * Triggers the visual animation for winning the game.
-     */
     private async triggerWinAnimation(): Promise<void> {
-        // Ensure only non-empty squares get the success class on their piece div
-        qsa<HTMLLIElement>('.square:not(.free) div').forEach(div => div.classList.add('success'));
-        if (this.gameArea) {
-            await fadeOut(this.gameArea, 500);
-            const msg: string = '<h1>Parabéns!!!</h1><a href="index.html" class="btn">Jogar Novamente</a>';
-            this.gameArea.innerHTML = msg;
-            await fadeIn(this.gameArea, 500);
+        this.squares.forEach(squareLi => {
+            if (!squareLi.classList.contains('free')) {
+                const pieceDiv = squareLi.firstElementChild as HTMLElement | null;
+                if (pieceDiv) pieceDiv.classList.add('success');
+            }
+        });
+        if (this.botMessageArea) {
+            this.botMessageArea.innerHTML = '<h1>Parabéns!!!</h1><button id="play_again" class="btn">Jogar Novamente</button>';
+            this.botMessageArea.classList.add('win-display');
+            this.botMessageArea.style.display = 'block';
+            qs<HTMLButtonElement>('#play_again', this.botMessageArea)?.addEventListener('click', () => window.location.reload());
         }
+        this.toggleSquareInteraction(true);
+        this.toggleControlButtons(true);
     }
 
-    /**
-     * Reads the current visual state of the puzzle from the DOM.
-     */
     private getBoardStateFromDOM(): BoardState {
         const boardState: BoardState = [];
         for (let i = 1; i <= NUM_SQUARES; i++) {
@@ -259,80 +319,60 @@ export class GameUIController {
             if (squareSelector === this.freeSquareId) {
                 boardState.push(0);
             } else {
-                const squareElement = qs<HTMLLIElement>(squareSelector);
-                const pieceElement = squareElement?.firstElementChild as HTMLElement | undefined;
+                const pieceElement = qs<HTMLLIElement>(squareSelector)?.firstElementChild as HTMLElement | undefined;
                 if (pieceElement?.id) {
                     const pieceNumStr = pieceElement.id.split('-')[1];
                     if (pieceNumStr) boardState.push(parseInt(pieceNumStr, 10));
-                    else {
-                        console.warn(`Malformed piece ID '${pieceElement.id}' in square ${squareSelector}.`);
-                        boardState.push(null);
-                    }
-                } else {
-                    console.warn(`No valid piece found in square ${squareSelector}.`);
-                    boardState.push(null);
-                }
+                    else { console.warn(`Malformed piece ID '${pieceElement.id}'`); boardState.push(null); }
+                } else { console.warn(`No valid piece in ${squareSelector}.`); boardState.push(null); }
             }
         }
         return boardState;
     }
 
-    /**
-     * Handles the click event for the "Mix" (Embaralhar) button.
-     * Shuffles the puzzle by making a specified number of random valid moves.
-     * Uses a simplified, non-animated DOM update for speed.
-     */
-    private handleMixClick(): void {
+    private handleMixClick(): void { // Shuffle logic should not use animations for speed
         let movesToMake = 1000;
         if (this.movesInput?.value) {
             const parsedVal = parseInt(this.movesInput.value, 10);
             if (!isNaN(parsedVal) && parsedVal > 0) movesToMake = parsedVal;
         }
         this.displayMessage(`Shuffling ${movesToMake} times...`, "info");
-        this.toggleControlButtons(true);
-        this.toggleSquareInteraction(true);
+        this.toggleControlButtons(true); this.toggleSquareInteraction(true);
 
         let successfulMixMoves = 0;
-        let currentFreeSquareNumForMix = parseInt(this.freeSquareId.substring(this.freeSquareId.lastIndexOf('-') + 1), 10);
+        let currentFreeSqNum = parseInt(this.freeSquareId.substring(4), 10);
 
         for (let i = 0; i < movesToMake; i++) {
-            const possibleMovers = POS_ADJACENCY[currentFreeSquareNumForMix];
+            const possibleMovers = POS_ADJACENCY[currentFreeSqNum];
             if (!possibleMovers || possibleMovers.length === 0) continue;
-            const randomMoverIndex = Math.floor(Math.random() * possibleMovers.length);
-            const moverSquareNum = possibleMovers[randomMoverIndex]!;
+            const moverSqNum = possibleMovers[Math.floor(Math.random() * possibleMovers.length)]!;
 
-            const pieceToMoveEl = qs<HTMLLIElement>(`#sq-${moverSquareNum}`);
-            const targetFreeEl = qs<HTMLLIElement>(`#sq-${currentFreeSquareNumForMix}`);
+            const pieceToMoveEl = qs<HTMLLIElement>(`#sq-${moverSqNum}`);
+            const targetFreeEl = qs<HTMLLIElement>(`#sq-${currentFreeSqNum}`);
             if(pieceToMoveEl && targetFreeEl) {
                 const pieceContent = pieceToMoveEl.firstElementChild;
                 if (pieceContent) targetFreeEl.appendChild(pieceContent);
                 targetFreeEl.classList.remove('free');
                 pieceToMoveEl.classList.add('free');
-                // Update this.freeSquareId using the ID of the element that became free
                 this.freeSquareId = `#${pieceToMoveEl.id}`;
-                currentFreeSquareNumForMix = parseInt(pieceToMoveEl.id.substring(pieceToMoveEl.id.lastIndexOf('-') + 1), 10);
+                currentFreeSqNum = parseInt(this.freeSquareId.substring(4), 10);
                 successfulMixMoves++;
             }
         }
         this.updateMovesCounter(successfulMixMoves, 'Mix');
         this.displayMessage(`Shuffled ${successfulMixMoves} times. Good luck!`, "info");
-        this.toggleControlButtons(false);
-        this.toggleSquareInteraction(false);
+        this.toggleControlButtons(false); this.toggleSquareInteraction(false); // This calls updateDraggableStatus
         this.currentMoves = 0;
     }
 
-    /**
-     * Handles the click event for the "Solve with Bot" button.
-     */
     private handleSolveClick(): void {
         this.displayMessage("Solving, please wait...", "info");
-        this.toggleControlButtons(true);
-        this.toggleSquareInteraction(true);
+        this.toggleControlButtons(true); this.toggleSquareInteraction(true);
 
         setTimeout(() => {
             const currentBoardState = this.getBoardStateFromDOM();
             if (currentBoardState.includes(null)) {
-                this.displayMessage("Error: Invalid board state. Cannot solve.", "error");
+                this.displayMessage("Error: Invalid board state.", "error");
                 this.toggleControlButtons(false); this.toggleSquareInteraction(false); return;
             }
             this.solutionActions = performAStarSearch(currentBoardState, POS_ADJACENCY) || [];
@@ -347,9 +387,6 @@ export class GameUIController {
         }, 50);
     }
 
-    /**
-     * Animates the sequence of moves found by the A* search algorithm.
-     */
     private async animateSolution(): Promise<void> {
         if (this.solutionActions.length === 0) {
             this.displayMessage("No solution to animate or already solved.", "info");
@@ -361,9 +398,13 @@ export class GameUIController {
         const performNextMove = async (): Promise<void> => {
             if (moveIndex >= this.solutionActions.length) {
                 this.displayMessage("Animation complete!", "success");
-                this.toggleControlButtons(false); this.toggleSquareInteraction(false);
-                this.solutionActions = [];
-                if (isBoardSolved(this.getBoardStateFromDOM())) await this.triggerWinAnimation();
+                this.solutionActions = []; // Clear actions
+                // Check win and re-enable controls after win animation if any, or directly
+                if (isBoardSolved(this.getBoardStateFromDOM())) {
+                    await this.triggerWinAnimation(); // triggerWinAnimation itself disables controls
+                } else { // Should be solved if animation completed, but as a fallback
+                    this.toggleControlButtons(false); this.toggleSquareInteraction(false);
+                }
                 return;
             }
             const action = this.solutionActions[moveIndex];
@@ -371,21 +412,21 @@ export class GameUIController {
                 console.error("Animation Error: Undefined action."); this.displayMessage("Animation error.", "error");
                 this.toggleControlButtons(false); this.toggleSquareInteraction(false); return;
             }
-            const tileSquareIdToMove = `#sq-${getSquareNumberFromIndex(action.fromIndex)}`;
+            const pieceSquareIdToMove = `#sq-${getSquareNumberFromIndex(action.fromIndex)}`;
             const targetEmptySquareId = `#sq-${getSquareNumberFromIndex(action.toIndex)}`;
 
             if (this.freeSquareId !== targetEmptySquareId) {
-                console.error(`Animation Error: Mismatch. UI free: ${this.freeSquareId}, Action target: ${targetEmptySpotSquareId}`, action);
+                console.error(`Animation Error: Mismatch. UI free: ${this.freeSquareId}, Action target: ${targetEmptySquareId}`, action);
                 this.displayMessage("Animation state error.", "error");
                 this.toggleControlButtons(false); this.toggleSquareInteraction(false); return;
             }
 
-            await this.movePieceOnDOM(tileSquareIdToMove, targetEmptySquareId);
+            await this.movePieceOnDOM(pieceSquareIdToMove, targetEmptySquareId);
             this.updateMovesCounter(moveIndex + 1, 'Bot');
+            this.updateDraggableStatus(); // Update draggable after bot move
             moveIndex++;
-            // Schedule next move after current one visually completes + small buffer
-            setTimeout(performNextMove, this.animationDuration + 50);
+            setTimeout(performNextMove, this.animationDuration + 100); // Ensure prev anim completes + buffer
         };
-        await performNextMove(); // Start the first move
+        await performNextMove();
     }
 }

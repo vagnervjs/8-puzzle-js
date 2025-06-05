@@ -24,6 +24,12 @@ This implementation features:
 - **Responsive Design**: Clean, modern UI with 3D tile effects
 - **Performance Optimized**: Efficient algorithms and smooth animations
 
+## 📸 Screenshot
+
+![8-Puzzle Game Interface](./assets/screenshot.png)
+
+*The clean, modern interface features numbered tiles with 3D effects, intuitive controls, and an AI solver button.*
+
 ## 🛠️ Technologies Used
 
 - **TypeScript** - Type-safe JavaScript with modern ES features
